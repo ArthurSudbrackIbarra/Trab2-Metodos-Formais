@@ -47,6 +47,12 @@ MODULE main
     -- Carros podem chegar no leste e no oeste a qualquer momento.
     next(veiculos_no_oeste) := {TRUE, FALSE};
     next(veiculos_no_leste) := {TRUE, FALSE};
+    -- Não há carros sobre a ponte quando ambas as sinaleiras estão vermelhas.
+    next(veiculos_sobre_ponte) :=
+      case
+        sinaleira_oeste = vermelho & sinaleira_leste = vermelho : FALSE;
+        TRUE : {TRUE, FALSE};
+      esac;
 
     -- Reseta temporizador.
     next(reiniciar_temp) := temp.timeout;
