@@ -1,0 +1,78 @@
+---------------------------------------------------------------------------
+-- Trabalho 2 Metodos Formais.                                           --
+---------------------------------------------------------------------------
+
+---------------------------------------------------------------------------
+-- TEMPORIZADOR.                                                         --
+---------------------------------------------------------------------------
+
+MODULE temporizador(reset)
+  VAR 
+    tempo : 0 .. 3;
+  ASSIGN
+    init(tempo) := 0;
+    next(tempo) := 
+      case
+        reset : 0;
+        tempo = 3 : 3;
+        TRUE : tempo + 1;
+      esac;
+  DEFINE
+    timeout := tempo = 3;
+
+---------------------------------------------------------------------------
+-- CONTROLADOR                                                           --
+---------------------------------------------------------------------------
+
+MODULE main
+  VAR
+    veiculos_no_oeste : boolean;
+    veiculos_no_leste : boolean;
+    veiculos_sobre_ponte : boolean;
+    sinaleira_oeste : {verde, vermelho};
+    sinaleira_leste : {verde, vermelho};
+    reiniciar_temp : boolean;
+    temp : temporizador(reiniciar_temp);
+  ASSIGN
+    -- Inicialização.
+    init(veiculos_no_oeste) := FALSE;
+    init(veiculos_no_leste) := FALSE;
+    init(veiculos_sobre_ponte) := FALSE;
+    init(sinaleira_oeste) := vermelho;
+    init(sinaleira_leste) := vermelho;
+    init(reiniciar_temp) := FALSE;
+
+    -- Transições de estado.
+
+    -- Carros podem chegar no leste e no oeste a qualquer momento.
+    next(veiculos_no_oeste) := {TRUE, FALSE};
+    next(veiculos_no_leste) := {TRUE, FALSE};
+
+    -- Reseta temporizador.
+    next(reiniciar_temp) := temp.timeout;
+
+    -- Controla a sinaleira oeste.
+    next(sinaleira_oeste) :=
+      case
+        sinaleira_oeste = verde & temp.timeout : vermelho;
+        sinaleira_leste = verde : vermelho;
+        veiculos_no_oeste & !veiculos_sobre_ponte : verde;
+        TRUE : verde;
+      esac;
+
+    -- Controla a sinaleira leste.
+    next(sinaleira_leste) :=
+      case
+        sinaleira_leste = verde & temp.timeout : vermelho;
+        sinaleira_oeste = verde : vermelho;
+        veiculos_no_leste & !veiculos_sobre_ponte : verde;
+        TRUE : vermelho;
+      esac;
+
+---------------------------------------------------------------------------
+-- MAIN                                                                  --
+---------------------------------------------------------------------------
+
+---------------------------------------------------------------------------
+-- PROPRIEDADES                                                          --
+---------------------------------------------------------------------------
