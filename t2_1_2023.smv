@@ -31,6 +31,7 @@ MODULE main
     veiculos_sobre_ponte : boolean;
     sinaleira_oeste : {verde, vermelho};
     sinaleira_leste : {verde, vermelho};
+    vez_sinaleira : {oeste, leste};
     reiniciar_temp : boolean;
     temp : temporizador(reiniciar_temp);
   ASSIGN
@@ -40,44 +41,49 @@ MODULE main
     init(veiculos_sobre_ponte) := FALSE;
     init(sinaleira_oeste) := vermelho;
     init(sinaleira_leste) := vermelho;
+    init(vez_sinaleira) := oeste;
     init(reiniciar_temp) := FALSE;
 
     -- Transições de estado.
 
-    -- Carros podem chegar no leste e no oeste a qualquer momento.
-    next(veiculos_no_oeste) := {TRUE, FALSE};
-    next(veiculos_no_leste) := {TRUE, FALSE};
-    -- Não há carros sobre a ponte quando ambas as sinaleiras estão vermelhas.
-    next(veiculos_sobre_ponte) :=
-      case
-        sinaleira_oeste = vermelho & sinaleira_leste = vermelho : FALSE;
-        TRUE : {TRUE, FALSE};
-      esac;
-
-    -- Reseta temporizador.
+    -- Reseta temporizador se necessário.
     next(reiniciar_temp) := temp.timeout;
+
+    -- Controla qual sinaleira tem direito de ficar verde.
+    next(vez_sinaleira) :=
+      case
+        !temp.timeout : vez_sinaleira;
+        vez_sinaleira = oeste : leste;
+        TRUE : oeste;
+      esac;
 
     -- Controla a sinaleira oeste.
     next(sinaleira_oeste) :=
       case
-        sinaleira_oeste = verde & temp.timeout : vermelho;
-        sinaleira_leste = verde : vermelho;
-        veiculos_no_oeste & !veiculos_sobre_ponte : verde;
-        TRUE : verde;
+        -- Se deu timeout e era verde, fica vermelha.
+        temp.timeout & sinaleira_oeste = verde : vermelho;
+        -- Se não tem veículos no oeste, fica vermelha.
+        !veiculos_no_oeste : vermelho;
+        -- Se tem veículos no oeste e nenhum sobre a ponte, fica verde.
+        -- Contanto que seja a vez dessa sinaleira.
+        vez_sinaleira = oeste & veiculos_no_oeste & !veiculos_sobre_ponte : verde;
+        -- Default.
+        TRUE : sinaleira_oeste;
       esac;
 
     -- Controla a sinaleira leste.
     next(sinaleira_leste) :=
       case
-        sinaleira_leste = verde & temp.timeout : vermelho;
-        sinaleira_oeste = verde : vermelho;
-        veiculos_no_leste & !veiculos_sobre_ponte : verde;
-        TRUE : vermelho;
+        -- Se deu timeout e era verde, fica vermelha.
+        temp.timeout & sinaleira_leste = verde : vermelho;
+        -- Se não tem veículos no leste, fica vermelha.
+        !veiculos_no_leste : vermelho;
+        -- Se tem veículos no leste e nenhum sobre a ponte, fica verde.
+        -- Contanto que seja a vez dessa sinaleira.
+        vez_sinaleira = leste & veiculos_no_leste & !veiculos_sobre_ponte : verde;
+        -- Default.
+        TRUE : sinaleira_leste;
       esac;
-
----------------------------------------------------------------------------
--- MAIN                                                                  --
----------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------
 -- PROPRIEDADES                                                          --
