@@ -14,6 +14,11 @@ simulate -v -a -i -k 1
 ```bash
 show_traces -v -a
 ```
+
 ```bash
 check_ltlspec
+```
+
+```bash
+check_ctlspec
 ```
