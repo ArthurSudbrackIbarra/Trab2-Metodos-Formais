@@ -44,6 +44,14 @@ MODULE main
 
     -- Transições de estado.
 
+    -- Regra que impede um veículos de estare na ponte
+    -- se não havia veículos no oeste ou no leste no estado anterior.
+    next(veiculos_sobre_ponte) :=
+      case
+        !veiculos_no_oeste & !veiculos_no_leste : FALSE;
+        TRUE : {FALSE, TRUE};
+      esac;
+
     -- Controla qual sinaleira tem direito de ficar verde.
     next(vez_sinaleira) :=
       case
@@ -92,14 +100,18 @@ MODULE main
 
 -- 1. Propriedade de segurança:
 -- nunca é o caso que ambos os semáforos são "verde" ao mesmo tempo.
-LTLSPEC G !(sinaleira_oeste = verde & sinaleira_leste = verde) -- OK.
+
+LTLSPEC G !(sinaleira_oeste = verde & sinaleira_leste = verde)
+
 -- A fórmula acima é verdadeira e é desejada porque se ambos os semáforos
 -- ficarem verdes ao mesmo tempo, pode ocorrer um acidente.
 
 -- 2. Propriedade de vivacidade:
 -- se um semáforo é "verde", então eventualmente ele será "vermelho".
-LTLSPEC G (sinaleira_oeste = verde -> F sinaleira_oeste = vermelho) -- OK.
-LTLSPEC G (sinaleira_leste = verde -> F sinaleira_leste = vermelho) -- OK.
+
+LTLSPEC G ((sinaleira_oeste = verde) -> (F sinaleira_oeste = vermelho))
+LTLSPEC G ((sinaleira_leste = verde) -> (F sinaleira_leste = vermelho))
+
 -- As fórmulas acima são verdadeiras e são desejadas porque se um semáforo
 -- ficar verde, ele deve ficar vermelho em algum momento, visto que se ele
 -- ficar verde para sempre, os veículos do outro lado da ponte nunca poderão
@@ -113,14 +125,18 @@ LTLSPEC G (sinaleira_leste = verde -> F sinaleira_leste = vermelho) -- OK.
 
 -- 1. Em algum momento o semáforo do lado oeste é
 -- "verde" e em algum momento o semáforo do lado leste é “verde”.
-CTLSPEC (EF (sinaleira_oeste = verde)) & (EF (sinaleira_leste = verde)) -- OK.
+
+CTLSPEC AG ((EF (sinaleira_oeste = verde)) & (EF (sinaleira_leste = verde)))
+
 -- A fórmula acima é verdadeira e é desejada, visto que é desejado que ambos
 -- os semáforos fiquem verdes em algum momento para que carros de ambos os
 -- lados possam atravessar a ponte.
 
 -- 2. Sempre que o semáforo do lado leste estiver "verde" e um veículo estiver
 -- sobre a ponte, é possível que o semáforo do lado leste permaneça “verde” para sempre.
-CTLSPEC (sinaleira_leste = verde & veiculos_sobre_ponte) -> (EG sinaleira_leste = verde) -- OK.
--- A fórmula acima é verdadeira e NÃO é desejada, visto que se o semáforo do
+
+CTLSPEC AG ((sinaleira_leste = verde & veiculos_sobre_ponte) -> (EG sinaleira_leste = verde))
+
+-- A fórmula acima é FALSA e realmente não é desejada, visto que se o semáforo do
 -- lado leste ficar verde para sempre, os veículos do lado oeste nunca poderão
--- atravessar a ponte. Aqui há um problema no modelo.
+-- atravessar a ponte.
