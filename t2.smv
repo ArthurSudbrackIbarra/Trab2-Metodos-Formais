@@ -2,6 +2,13 @@
 -- Trabalho 2 Metodos Formais.                                           --
 ---------------------------------------------------------------------------
 
+-- Nomes: 
+-- Arthur Sudbrack Ibarra
+-- Felipe Grosze Nipper
+-- Luiz Eduardo Mello dos Reis
+-- Miguel Torres de Castro
+-- Willian Magnum Albeche
+
 ---------------------------------------------------------------------------
 -- TEMPORIZADOR.                                                         --
 ---------------------------------------------------------------------------
@@ -44,7 +51,7 @@ MODULE main
 
     -- Transições de estado.
 
-    -- Regra que impede um veículos de estare na ponte
+    -- Regra que impede um veículos de estarem na ponte
     -- se não havia veículos no oeste ou no leste no estado anterior.
     next(veiculos_sobre_ponte) :=
       case
@@ -117,7 +124,45 @@ LTLSPEC G ((sinaleira_leste = verde) -> (F sinaleira_leste = vermelho))
 -- ficar verde para sempre, os veículos do outro lado da ponte nunca poderão
 -- atravessar.
 
--- 3. TODO...
+-- 3. Sempre que existir um veículo na entrada do lado oeste da ponte, eventualmente o 
+-- semáforo do lado oeste será “verde”, dadas as seguintes suposições: 
+
+-- Se veículos estão sobre a ponte, eventualmente todos os veículos sairão da ponte; 
+
+-- Se um veículo está em um semáforo “vermelho”, ele permanece no semáforo 
+-- sob a luz “vermelha” até e incluindo o primeiro passo (se existir um) no qual o 
+-- semáforo muda para “verde”.
+
+-- [OESTE]
+-- Primeiro sub-item:
+-- LTLSPEC (veiculos_sobre_ponte) -> (F !veiculos_sobre_ponte)
+-- Segundo sub-item:
+-- LTLSPEC (veiculos_no_oeste & sinaleira_oeste = vermelho) -> ((veiculos_no_oeste & sinaleira_oeste = vermelho) U (sinaleira_oeste = verde))
+-- Item principal:
+-- LTLSPEC (veiculos_no_oeste) -> (F sinaleira_oeste = verde)
+
+-- Fórmula completa:
+
+LTLSPEC G ((((veiculos_sobre_ponte) -> (F !veiculos_sobre_ponte)) & ((veiculos_no_oeste & sinaleira_oeste = vermelho) -> ((veiculos_no_oeste & sinaleira_oeste = vermelho) U (sinaleira_oeste = verde)))) -> ((veiculos_no_oeste) -> (F sinaleira_oeste = verde)))
+
+-- [LESTE]
+-- Primeiro sub-item:
+-- LTLSPEC (veiculos_sobre_ponte) -> (F !veiculos_sobre_ponte)
+-- Segundo sub-item:
+-- LTLSPEC (veiculos_no_leste & sinaleira_leste = vermelho) -> ((veiculos_no_leste & sinaleira_leste = vermelho) U (sinaleira_leste = verde))
+-- Item principal:
+-- LTLSPEC (veiculos_no_leste) -> (F sinaleira_leste = verde)
+
+-- Fórmula completa:
+
+LTLSPEC G ((((veiculos_sobre_ponte) -> (F !veiculos_sobre_ponte)) & ((veiculos_no_leste & sinaleira_leste = vermelho) -> ((veiculos_no_leste & sinaleira_leste = vermelho) U (sinaleira_leste = verde)))) -> ((veiculos_no_leste) -> (F sinaleira_leste = verde)))
+
+-- As fórmulas acima são verdadeiras e são desejadas, visto que as suposições
+-- descrevem o comportamento esperado dos veículos e das sinaleiras. Se um
+-- veículo está sobre a ponte, ele eventualmente sairá da ponte. Se um veículo
+-- está em um semáforo vermelho, ele permanecerá no semáforo até que ele
+-- fique verde. Se um veículo está na entrada do lado oeste, eventualmente o
+-- semáforo do lado oeste ficará verde, e o mesmo vale para o lado leste.
 
 ---------------------------------------------------------------------------
 -- CTL                                                                   --

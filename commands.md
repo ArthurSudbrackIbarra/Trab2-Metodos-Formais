@@ -16,9 +16,9 @@ show_traces -v -a
 ```
 
 ```bash
-check_ltlspec
+go; check_ltlspec
 ```
 
 ```bash
-check_ctlspec
+go; check_ctlspec
 ```
